@@ -4,7 +4,7 @@ import * as store from '../utils/store.js';
 import { minToTime, timeToMin, WEEKDAYS_ZH, getSemesterWeek, todayStr } from '../utils/date.js';
 import { showToast } from '../components/toast.js';
 import { showModal } from '../components/modal.js';
-import { downloadICS } from '../utils/ics.js';
+
 import { renderTabbar } from '../components/tabbar.js';
 
 const DAY_START = 8 * 60;
@@ -78,7 +78,7 @@ function render() {
       <div><div class="sched-title">每周课表</div><div class="sched-sub">${weekInfo ? `${weekInfo.name} · 第 ${weekInfo.week} 周` : '当前不在教学周内'}</div></div>
       <div class="sched-actions">
         ${blocks.length ? '<div class="act plain" id="copy-btn">复制</div>' : ''}
-        ${blocks.length ? '<div class="act plain" id="ics-btn">导出日历</div>' : ''}
+
         <div class="act primary" id="add-btn">+ 添加</div>
       </div>
     </div>
@@ -95,7 +95,7 @@ function render() {
         </div>
       </div>
     </div>
-    <div class="muted" style="text-align:center;padding:10px 16px">点击课程块可删除时段;「导出日历」生成 .ics 文件可导入任意日历应用</div>
+    <div class="muted" style="text-align:center;padding:10px 16px">点击课程块可删除时段</div>
     ${showAddModal ? `
       <div class="modal-mask" id="add-mask">
         <div class="modal" style="padding:20px">
@@ -163,13 +163,7 @@ function render() {
     navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败'));
   };
 
-  // ICS export
-  const icsBtn = document.getElementById('ics-btn');
-  if (icsBtn) icsBtn.onclick = () => {
-    const ok = downloadICS();
-    if (ok) showToast('已生成 .ics 文件,请导入日历应用');
-    else showToast('课表为空');
-  };
+
 
   renderTabbar();
 }
