@@ -78,8 +78,51 @@ function commitEnroll(code, slot, onDone) {
 const WEEK_ZH_NUM = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 function dayTextNum(day) { return WEEK_ZH_NUM[day] || ''; }
 
+// 互斥检测:如果目标课程有互斥字段,检查已选课程代码是否出现在互斥文本中
+function findExclusiveClash(code) {
+  const course = getCourse(code);
+  if (!course || !course.exclusive) return [];
+  const sel = store.getSelection();
+  const matches = [];
+  sel.forEach(scode => {
+    if (scode !== code && course.exclusive.indexOf(scode) >= 0) {
+      const c = getCourse(scode);
+      matches.push({ code: scode, name: c ? c.titleZh : '' });
+    }
+  });
+  return matches;
+}
+
 // 选课入口:0 个班次直接加入;1 个班次直接同步;多个班次弹窗选班
 export function enrollCourse(code, onDone) {
+  // 互斥检查
+  const exclClashes = findExclusiveClash(code);
+  if (exclClashes.length) {
+    const names = exclClashes.map(m => `${m.code} ${m.name}`).join('、');
+    showModal({
+      title: '课程互斥提示',
+      content: `<div style="font-size:12px;color:#5b5f66;line-height:1.8">
+        该课程与已选课程存在互斥关系:<br>
+        <b style="color:#c0392b">${names}</b><br><br>
+        确认选课将移出上述课程(含课表时段),并加入 <b>${code}</b>。
+      </div>`,
+      confirmText: '取代旧课程',
+      cancelText: '保留原课表',
+      onConfirm: () => {
+        exclClashes.forEach(m => {
+          store.removeCourse(m.code);
+          store.removeSlotsByCode(m.code);
+        });
+        doEnroll(code, onDone);
+      },
+      onCancel: () => { showToast('已取消,课表未变动'); onDone && onDone(); }
+    });
+    return;
+  }
+  doEnroll(code, onDone);
+}
+
+function doEnroll(code, onDone) {
   const secs = timedSections(code);
   if (!secs.length) {
     store.addCourse(code);

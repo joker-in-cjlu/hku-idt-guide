@@ -1,5 +1,4 @@
 // 本地存储封装
-const KEY_REVIEWS = 'idt_reviews';
 const KEY_SELECTION = 'idt_selection';
 const KEY_SLOTS = 'idt_slots';
 
@@ -20,31 +19,6 @@ function safeWrite(key, value) {
   } catch (e) {
     return false;
   }
-}
-
-// ---------- 课程评价 ----------
-export function getAllReviews() { return safeRead(KEY_REVIEWS, {}); }
-export function getReviews(courseCode) { return getAllReviews()[courseCode] || []; }
-
-export function addReview(courseCode, review) {
-  const all = getAllReviews();
-  if (!all[courseCode]) all[courseCode] = [];
-  const item = {
-    id: Date.now() + '_' + Math.floor(Math.random() * 1000),
-    rating: review.rating,
-    nickname: review.nickname || '匿名',
-    content: review.content,
-    ts: Date.now()
-  };
-  all[courseCode].unshift(item);
-  return safeWrite(KEY_REVIEWS, all) ? item : null;
-}
-
-export function getRatingSummary(courseCode) {
-  const list = getReviews(courseCode);
-  if (!list.length) return { count: 0, avg: 0 };
-  const sum = list.reduce((s, r) => s + (r.rating || 0), 0);
-  return { count: list.length, avg: Math.round((sum / list.length) * 10) / 10 };
 }
 
 // ---------- 我的选课 ----------

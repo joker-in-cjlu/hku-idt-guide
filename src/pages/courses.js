@@ -11,7 +11,7 @@ let semFilter = 'all';
 function render() {
   const container = document.getElementById('page-container');
   const selection = store.getSelection();
-  const ratings = store.getAllReviews();
+
 
   // Credit calc
   let listA = 0, discipline = 0, total = 0;
@@ -28,12 +28,10 @@ function render() {
   const courses = COURSES.filter(c => {
     if (listFilter !== 'all' && c.list !== listFilter) return false;
     if (semFilter !== 'all' && c.semester !== '1&2' && c.semester !== semFilter) return false;
-    if (kw) { const hay = (c.code + c.title + c.titleZh).toLowerCase(); if (hay.indexOf(kw) < 0) return false; }
+    if (kw) { const hay = (c.code + c.title + c.titleZh + (c.exclusive || '')).toLowerCase(); if (hay.indexOf(kw) < 0) return false; }
     return true;
   }).map(c => {
-    const rs = ratings[c.code] || [];
-    const avg = rs.length ? Math.round((rs.reduce((s, r) => s + (r.rating || 0), 0) / rs.length) * 10) / 10 : 0;
-    return { ...c, semText: semesterText(c.semester), timeText: timeSummary(c.code), ratingAvg: avg, ratingCount: rs.length, selected: selection.indexOf(c.code) >= 0 };
+    return { ...c, semText: semesterText(c.semester), timeText: timeSummary(c.code), selected: selection.indexOf(c.code) >= 0 };
   });
 
   const listTabs = [{ key: 'all', label: '全部' }, { key: 'A', label: 'List A 核心' }, { key: 'B', label: 'List B 选修' }, { key: 'capstone', label: '毕业设计' }];
@@ -98,8 +96,8 @@ function render() {
         <div class="course-en">${c.title}</div>
         <div class="course-meta">${c.credits} 学分 · ${c.semText}${c.cef ? ' · <span style="color:#b8741a">CEF 可报销</span>' : ''}</div>
         <div class="course-time">${c.timeText ? '🕒 ' + c.timeText : '🕒 时间待定'}</div>
+        ${c.exclusive ? `<div style="font-size:11px;color:#c0392b;margin-top:6px">⚠ 互斥: ${c.exclusive}</div>` : ''}
         <div class="course-foot">
-          <div>${c.ratingCount > 0 ? `<span class="star star-on">★</span> <span style="font-size:13px;font-weight:600;color:#f5a623;margin:0 4px">${c.ratingAvg}</span><span style="font-size:11px;color:#8a8f99">(${c.ratingCount} 条评价)</span>` : '<span style="font-size:11px;color:#8a8f99">暂无评价,去抢沙发</span>'}</div>
           <div class="select-btn ${c.selected ? 'selected' : ''}" data-toggle="${c.code}">${c.selected ? '已选 ✓' : '+ 选课'}</div>
         </div>
       </div>
@@ -124,14 +122,10 @@ function render() {
   container.querySelectorAll('[data-sem]').forEach(el => { el.onclick = () => { semFilter = el.dataset.sem; render(); }; });
   container.querySelectorAll('[data-toggle]').forEach(el => {
     el.onclick = (e) => {
-      e.stopPropagation();
       const code = el.dataset.toggle;
       if (store.isSelected(code)) unenrollCourse(code, render);
       else enrollCourse(code, render);
     };
-  });
-  container.querySelectorAll('.course-card').forEach(el => {
-    el.onclick = () => navigate(`/course-detail?code=${el.dataset.code}`);
   });
   const goSched = document.getElementById('go-schedule');
   if (goSched) goSched.onclick = () => navigate('/schedule');
