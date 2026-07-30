@@ -25,22 +25,22 @@ export default function homePage() {
     : (ups.length ? `距「${ups[0].title}」还有 ${ups[0].days} 天` : '假期中,好好充电');
 
   container.innerHTML = `
-    <div class="hero" style="background:linear-gradient(135deg,#00573f,#0a7a56);border-radius:0 0 16px 16px;padding:24px 16px 20px;color:#fff">
+    <div class="hero" style="background:linear-gradient(135deg,#22c0dc,#1aa3c0);border-radius:0 0 16px 16px;padding:24px 16px 20px;color:#fff">
       <div style="font-size:11px;opacity:0.85">MSc(Eng) Innovative Design & Technology · 26 级</div>
       <div style="font-size:20px;font-weight:700;margin-top:8px">${todayText}</div>
       <div style="font-size:13px;margin-top:4px;opacity:0.95">${heroWeek}</div>
     </div>
     <div style="display:flex;flex-wrap:wrap;padding:8px 8px 0">
       <div class="entry-card" data-path="/calendar" style="background:#2e6f5c"><div class="ec-name">校历</div><div class="ec-sub">2026-27 学期节点</div></div>
-      <div class="entry-card" data-path="/commute" style="background:#31597f"><div class="ec-name">港深通勤</div><div class="ec-sub">6 条路线攻略</div></div>
-      <div class="entry-card" data-path="/courses" style="background:#6b5b95"><div class="ec-name">选课评价</div><div class="ec-sub">List A/B 课程库</div></div>
-      <div class="entry-card" data-path="/schedule" style="background:#8a6d3b"><div class="ec-name">每周课表</div><div class="ec-sub">同步手机日历</div></div>
+      <div class="entry-card" data-path="/commute" style="background:#31597f"><div class="ec-name">地铁</div><div class="ec-sub">多条线路实时监控</div></div>
+      <div class="entry-card" data-path="/courses" style="background:#6b5b95"><div class="ec-name">选课</div><div class="ec-sub">List A/B 课程库</div></div>
+      <div class="entry-card" data-path="/schedule" style="background:#8a6d3b"><div class="ec-name">课表</div><div class="ec-sub">备注重要信息</div></div>
     </div>
     <div class="card">
-      <div class="card-title">毕业学分结构(26 级起统一 72 学分)</div>
+      <div class="card-title">毕业学分结构(72 ~ 84 学分)</div>
       <div style="display:flex;align-items:baseline;margin-bottom:12px">
-        <span style="font-size:28px;font-weight:700;color:#00573f;margin-right:8px">${rules.total}</span>
-        <span style="font-size:12px;color:#6b7280">学分 = 课程 ${rules.courseCredits} + 毕业论文 ${rules.dissertation}</span>
+        <span style="font-size:28px;font-weight:700;color:#00573f;margin-right:8px">${rules.total} ~ ${rules.total + rules.self_choose}</span>
+        <span style="font-size:12px;color:#6b7280">学分 = 课程 ${rules.courseCredits} + 毕业论文 ${rules.dissertation} + 自由选择 ${rules.self_choose}</span>
       </div>
       <div style="display:flex;justify-content:space-between;background:#f4f8f6;border-radius:12px;padding:12px 8px">
         <div style="flex:1;text-align:center"><div style="font-size:15px;font-weight:600;color:#00573f">≥ ${rules.listAMin}</div><div style="font-size:10px;color:#6b7280;margin-top:2px">List A 核心课</div></div>
@@ -56,7 +56,7 @@ export default function homePage() {
         · 新增 List A:IDAT7222 先进CADCAM与AI制造 / IDAT7223 人因设计与多媒体 / IDAT7224 深度学习工程技术 / IDAT7225 目标检测与分类AI基础<br>
         · IDAT7216 功能设计与知识产权法已从课程列表移除(2026-27 课表不再开设)<br>
         · MECH6034 / COMP7503 / COMP7506 自 26 级起转入 List B(待大学批准)<br>
-        · 总学分要求统一为 72 学分(原为 72-84)
+        · 总学分要求统一为 72-84 学分
       </div>
     </div>
     <div class="section-title">近期关键节点</div>
