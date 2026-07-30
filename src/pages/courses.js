@@ -26,7 +26,8 @@ function render() {
   // Filter
   const kw = keyword.trim().toLowerCase();
   const courses = COURSES.filter(c => {
-    if (listFilter !== 'all' && c.list !== listFilter) return false;
+    if (listFilter !== 'all' && listFilter !== 'selected' && c.list !== listFilter) return false;
+    if (listFilter === 'selected' && selection.indexOf(c.code) < 0) return false;
     if (semFilter !== 'all' && c.semester !== '1&2' && c.semester !== semFilter) return false;
     if (kw) { const hay = (c.code + c.title + c.titleZh + (c.exclusive || '')).toLowerCase(); if (hay.indexOf(kw) < 0) return false; }
     return true;
@@ -34,7 +35,7 @@ function render() {
     return { ...c, semText: semesterText(c.semester), timeText: timeSummary(c.code), selected: selection.indexOf(c.code) >= 0 };
   });
 
-  const listTabs = [{ key: 'all', label: '全部' }, { key: 'A', label: 'List A 核心' }, { key: 'B', label: 'List B 选修' }, { key: 'capstone', label: '毕业设计' }];
+  const listTabs = [{ key: 'all', label: '全部' }, { key: 'A', label: 'List A 核心' }, { key: 'B', label: 'List B 选修' }, { key: 'capstone', label: '毕业设计' }, { key: 'selected', label: '已选择' }];
   const semTabs = [{ key: 'all', label: '全部学期' }, { key: '1', label: '第一学期' }, { key: '2', label: '第二学期' }];
   const rules = DEGREE_RULES;
 

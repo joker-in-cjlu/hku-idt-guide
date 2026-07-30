@@ -12,6 +12,8 @@ const DAY_END = 22 * 60;
 const COLORS = ['#00573f', '#31597f', '#6b5b95', '#8a6d3b', '#7a5195', '#9c4f4f', '#2e6f5c', '#3d6e9e'];
 
 let showAddModal = false;
+let showNoteModal = false;
+let editingSlot = null; // { id, code, note }
 let termFilter = 'all';
 let form = { courseIndex: 0, dayIndex: 0, startTime: '18:30', endTime: '21:30', location: '' };
 
@@ -29,7 +31,7 @@ function render() {
     if (!(s.code in colorMap)) { colorMap[s.code] = COLORS[ci % COLORS.length]; ci++; }
     return {
       id: s.id, code: s.code, name: c ? c.titleZh : '', location: s.location,
-      instructor: s.instructor || '', term: s.term || 0, section: s.section || '',
+      instructor: s.instructor || '', term: s.term || 0, section: s.section || '', note: s.note || '',
       leftPct: Math.round(((s.day - 1) * 100) / 7 * 1000) / 1000,
       top: s.startMin - DAY_START, height: Math.max(s.endMin - s.startMin, 40),
       color: colorMap[s.code], timeText: `${minToTime(s.startMin)}-${minToTime(s.endMin)}`
@@ -64,6 +66,7 @@ function render() {
       .block-name{font-size:9px;opacity:0.9;line-height:1.3}
       .block-time{opacity:0.85;font-size:9px}
       .block-loc{opacity:0.8;font-size:9px}
+      .block-note{opacity:0.95;font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .term-tabs{display:flex;gap:8px;padding:0 16px 8px}
       .term-tab{font-size:12px;color:#4b5563;background:#fff;border-radius:999px;padding:4px 14px;cursor:pointer}
       .term-tab.active{background:#00573f;color:#fff;font-weight:600}
@@ -90,12 +93,12 @@ function render() {
         <div class="days-wrap" style="height:${gridHeight}px">
           ${WEEKDAYS_ZH.map((_, i) => `<div class="day-col" style="left:${(i*100/7)}%;width:${100/7}%"></div>`).join('')}
           ${hours.map((_, i) => `<div class="h-line" style="top:${i * 60}px"></div>`).join('')}
-          ${blocks.map(b => `<div class="block" data-id="${b.id}" style="left:${b.leftPct}%;top:${b.top}px;height:${b.height}px;background:${b.color}"><div class="block-code">${b.code}</div>${b.name ? `<div class="block-name">${b.name}</div>` : ''}<div class="block-time">${b.term ? `S${b.term} ` : ''}${b.timeText}</div>${b.location ? `<div class="block-loc">${b.location}</div>` : ''}${b.instructor ? `<div class="block-loc">${b.instructor}</div>` : ''}</div>`).join('')}
+          ${blocks.map(b => `<div class="block" data-id="${b.id}" style="left:${b.leftPct}%;top:${b.top}px;height:${b.height}px;background:${b.color}"><div class="block-code">${b.code}</div>${b.name ? `<div class="block-name">${b.name}</div>` : ''}<div class="block-time">${b.term ? `S${b.term} ` : ''}${b.timeText}</div>${b.location ? `<div class="block-loc">${b.location}</div>` : ''}${b.instructor ? `<div class="block-loc">${b.instructor}</div>` : ''}${b.note ? `<div class="block-note">📝 ${b.note}</div>` : ''}</div>`).join('')}
           ${blocks.length === 0 ? '<div class="empty-hint"><div>课表还是空的</div><div class="empty-sub">在「课程」页点「+ 选课」自动同步,或点右上角「+ 添加」手动录入</div></div>' : ''}
         </div>
       </div>
     </div>
-    <div class="muted" style="text-align:center;padding:10px 16px">点击课程块可删除时段</div>
+    <div class="muted" style="text-align:center;padding:10px 16px">点击课程块可添加备注</div>
     ${showAddModal ? `
       <div class="modal-mask" id="add-mask">
         <div class="modal" style="padding:20px">
@@ -106,8 +109,23 @@ function render() {
             <div class="pk-row"><span class="pk-label">开始</span><input type="time" class="pk-input" id="pk-start" value="${form.startTime}" min="08:00" max="22:00" /></div>
             <div class="pk-row"><span class="pk-label">结束</span><input type="time" class="pk-input" id="pk-end" value="${form.endTime}" min="08:00" max="22:00" /></div>
             <div class="pk-row"><span class="pk-label">地点</span><input class="pk-input" id="pk-loc" placeholder="如 CB313 / 线上(选填)" value="${form.location}" /></div>
+            <div class="pk-row"><span class="pk-label">备注</span><input class="pk-input" id="pk-note" placeholder="选填" value="${form.note || ''}" maxlength="200" /></div>
             <div class="modal-btns"><div class="m-btn cancel" id="add-cancel">取消</div><div class="m-btn confirm" id="add-save">保存</div></div>
           ` : '<div style="text-align:center;color:#8a8f99;font-size:13px;padding:20px 0">请先在「课程」页加入选课</div><div class="modal-btns"><div class="m-btn cancel" id="add-cancel">关闭</div></div>'}
+        </div>
+      </div>
+    ` : ''}
+    ${showNoteModal && editingSlot ? `
+      <div class="modal-mask" id="note-mask">
+        <div class="modal" style="padding:20px">
+          <div class="modal-title">课程备注</div>
+          <div style="font-size:13px;color:#14312a;margin-bottom:12px">${editingSlot.code} ${(getCourse(editingSlot.code) || {}).titleZh || ''}</div>
+          <textarea class="pk-input" id="note-input" placeholder="备注内容（如作业截止、考试日期等）" style="width:100%;min-height:80px;resize:vertical" maxlength="200">${editingSlot.note}</textarea>
+          <div class="modal-btns">
+            ${editingSlot.note ? '<div class="m-btn cancel" id="note-clear" style="background:#c0392b;color:#fff">清除备注</div>' : ''}
+            <div class="m-btn cancel" id="note-cancel">取消</div>
+            <div class="m-btn confirm" id="note-save">保存</div>
+          </div>
         </div>
       </div>
     ` : ''}
@@ -127,6 +145,7 @@ function render() {
     const startTime = document.getElementById('pk-start').value;
     const endTime = document.getElementById('pk-end').value;
     const location = document.getElementById('pk-loc').value;
+    const note = document.getElementById('pk-note').value;
     const startMin = timeToMin(startTime);
     const endMin = timeToMin(endTime);
     if (endMin <= startMin) { showToast('结束时间需晚于开始时间'); return; }
@@ -135,30 +154,50 @@ function render() {
     const clash = store.getSlots().some(s => s.day === day && !(s.endMin <= startMin || s.startMin >= endMin));
     if (clash) { showToast('该时段与已有课程冲突'); return; }
     const course = selection[courseIdx];
-    store.addSlot({ code: course.code, day, startMin, endMin, location: location.trim() });
+    store.addSlot({ code: course.code, day, startMin, endMin, location: location.trim(), note: note.trim() });
     showAddModal = false;
-    form = { courseIndex: courseIdx, dayIndex: dayIdx, startTime, endTime, location: '' };
+    form = { courseIndex: courseIdx, dayIndex: dayIdx, startTime, endTime, location: '', note: '' };
     showToast('已添加');
     render();
   };
 
-  // Block tap to delete
+  // Block tap to add/edit note
   container.querySelectorAll('.block').forEach(el => {
     el.onclick = () => {
-      showModal({
-        title: '删除该上课时段?',
-        content: '删除后不影响「我的选课」',
-        onConfirm: () => { store.removeSlot(el.dataset.id); render(); }
-      });
+      const slot = store.getSlots().find(s => s.id === el.dataset.id);
+      editingSlot = slot ? { id: slot.id, code: slot.code, note: slot.note || '' } : null;
+      showNoteModal = true;
+      render();
     };
   });
+
+  // Note modal events
+  const noteSave = document.getElementById('note-save');
+  const noteCancel = document.getElementById('note-cancel');
+  const noteClear = document.getElementById('note-clear');
+  const noteMask = document.getElementById('note-mask');
+  if (noteSave) noteSave.onclick = () => {
+    const input = document.getElementById('note-input');
+    store.updateSlot(editingSlot.id, { note: input.value.trim() });
+    showNoteModal = false; editingSlot = null;
+    showToast('备注已保存');
+    render();
+  };
+  if (noteCancel) noteCancel.onclick = () => { showNoteModal = false; editingSlot = null; render(); };
+  if (noteClear) noteClear.onclick = () => {
+    store.updateSlot(editingSlot.id, { note: '' });
+    showNoteModal = false; editingSlot = null;
+    showToast('备注已清除');
+    render();
+  };
+  if (noteMask) noteMask.onclick = (e) => { if (e.target === noteMask) { showNoteModal = false; editingSlot = null; render(); } };
 
   // Copy
   const copyBtn = document.getElementById('copy-btn');
   if (copyBtn) copyBtn.onclick = () => {
     const lines = store.getSlots().slice().sort((a, b) => a.day - b.day || a.startMin - b.startMin).map(s => {
       const c = getCourse(s.code);
-      return `${WEEKDAYS_ZH[s.day - 1]} ${minToTime(s.startMin)}-${minToTime(s.endMin)} ${s.code} ${c ? c.titleZh : ''}${s.location ? ' @' + s.location : ''}`;
+      return `${WEEKDAYS_ZH[s.day - 1]} ${minToTime(s.startMin)}-${minToTime(s.endMin)} ${s.code} ${c ? c.titleZh : ''}${s.location ? ' @' + s.location : ''}${s.note ? ' 📝' + s.note : ''}`;
     });
     navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败'));
   };

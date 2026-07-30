@@ -64,3 +64,11 @@ export function removeSlotsByCode(courseCode) {
   const list = getSlots().filter((s) => s.code !== courseCode);
   return safeWrite(KEY_SLOTS, list);
 }
+
+export function updateSlot(id, updates) {
+  const list = getSlots();
+  const idx = list.findIndex((s) => s.id === id);
+  if (idx < 0) return false;
+  list[idx] = Object.assign({}, list[idx], updates);
+  return safeWrite(KEY_SLOTS, list);
+}
