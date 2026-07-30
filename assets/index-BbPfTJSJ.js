@@ -4,7 +4,7 @@
       <span>${i.label}</span>
     </a>
   `).join(""),e.onclick=i=>{const o=i.target.closest(".tab-item");o&&F(o.dataset.path)}}function Le(){const t=document.getElementById("page-container"),e=P(),a=`${e} 星期${["日","一","二","三","四","五","六"][new Date().getDay()]}`,d=ye(e),l=he,c=Ie(3).map(s=>({title:s.title+(s.tentative?"(暂定)":""),color:k[s.type].color,days:ke(s.date),dateText:s.endDate?`${s.date} 至 ${s.endDate}`:s.date})),x=d?`${d.name} · 第 ${d.week} 周`:c.length?`距「${c[0].title}」还有 ${c[0].days} 天`:"假期中,好好充电";t.innerHTML=`
-    <div class="hero" style="background:linear-gradient(135deg,#00573f,#0a7a56);border-radius:0 0 16px 16px;padding:24px 16px 20px;color:#fff">
+    <div class="hero" style="background:linear-gradient(135deg,#22c0dc,#1aa3c0);border-radius:0 0 16px 16px;padding:24px 16px 20px;color:#fff">
       <div style="font-size:11px;opacity:0.85">MSc(Eng) Innovative Design & Technology · 26 级</div>
       <div style="font-size:20px;font-weight:700;margin-top:8px">${a}</div>
       <div style="font-size:13px;margin-top:4px;opacity:0.95">${x}</div>
