@@ -19,8 +19,9 @@ export const FAVORITES = [
   { code: 'HKU', name: '香港大學', nameEn: 'HKU', line: 'ISL' },
   { code: 'ADM', name: '金鐘', nameEn: 'Admiralty', line: 'ISL' },
   { code: 'CEN', name: '中環', nameEn: 'Central', line: 'ISL' },
-  { code: 'SYP', name: '西營盤', nameEn: 'Sai Ying Pun', line: 'ISL' },
-  { code: 'SHW', name: '上環', nameEn: 'Sheung Wan', line: 'ISL' }
+  { code: 'ADM', name: '金鐘', nameEn: 'Admiralty', line: 'TWL' },
+  { code: 'CEN', name: '中環', nameEn: 'Central', line: 'TWL' },
+  { code: 'JOR', name: '佐敦', nameEn: 'Jordan', line: 'TWL' }
 ];
 
 // 各線車站列表

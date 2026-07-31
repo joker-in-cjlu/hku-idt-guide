@@ -56,6 +56,17 @@ function render() {
       .status-dot.live { background: #22c55e; animation: mtr-pulse 2s infinite; }
       .status-dot.error { background: #ef4444; }
       @keyframes mtr-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+      .map-section { margin-top: 16px; padding: 0 0 20px; }
+      .map-section .section-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+      .mtr-map-thumb { width: 100%; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,45,32,0.08); transition: transform .2s; }
+      .mtr-map-thumb:active { transform: scale(0.98); }
+
+      .zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; flex-direction: column; touch-action: none; }
+      .zoom-overlay .zoom-close { position: fixed; top: 16px; right: 16px; z-index: 10001; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; font-size: 20px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+      .zoom-overlay .zoom-hint { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10001; font-size: 11px; color: rgba(255,255,255,0.5); pointer-events: none; }
+      .zoom-overlay .zoom-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .zoom-overlay .zoom-image { max-width: 95vw; max-height: 95vh; object-fit: contain; transition: transform .1s ease-out; transform-origin: center center; user-select: none; -webkit-user-drag: none; }
     </style>
 
     <div class="mtr-page">
@@ -90,6 +101,12 @@ function render() {
       </div>
 
       <div id="arrival-panel"></div>
+
+      <div class="map-section" id="map-section">
+        <div class="section-label">🗺️ 港鐵路綫圖</div>
+        <div style="font-size:11px;color:#8a8f99;margin-bottom:8px">點擊圖片可放大查看，支援縮放與拖拽</div>
+        <img id="mtr-map-img" class="mtr-map-thumb" src="https://www.mtr.com.hk/archive/corporate/en/services/images/route_map.jpg" alt="港鐵路綫圖" />
+      </div>
     </div>
   `;
 
@@ -125,7 +142,161 @@ function render() {
     renderArrivalPanel();
   }
 
+  // Setup zoomable map
+  setupZoomOverlay();
+
   renderTabbar();
+}
+
+function setupZoomOverlay() {
+  const mapImg = document.getElementById('mtr-map-img');
+  if (!mapImg) return;
+
+  mapImg.onclick = () => openZoom();
+}
+
+function openZoom() {
+  // Remove existing overlay if any
+  const existing = document.querySelector('.zoom-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'zoom-overlay';
+  overlay.innerHTML = `
+    <button class="zoom-close">✕</button>
+    <div class="zoom-container" id="zoom-container">
+      <img class="zoom-image" id="zoom-image" src="https://www.mtr.com.hk/archive/corporate/en/services/images/route_map.jpg" alt="港鐵路綫圖" />
+    </div>
+    <div class="zoom-hint">滑鼠滾輪 / 雙指縮放，拖拽移動</div>
+  `;
+  document.body.appendChild(overlay);
+
+  const img = overlay.querySelector('#zoom-image');
+  const container = overlay.querySelector('#zoom-container');
+  const closeBtn = overlay.querySelector('.zoom-close');
+
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let lastDist = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let lastTranslateX = 0;
+  let lastTranslateY = 0;
+
+  function applyTransform() {
+    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    const hint = overlay.querySelector('.zoom-hint');
+    if (hint) hint.textContent = `${Math.round(scale * 100)}% · 滑鼠滾輪/雙指縮放，拖拽移動`;
+  }
+
+  // Mouse wheel zoom
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = img.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+
+    const oldScale = scale;
+    scale = Math.min(5, Math.max(0.5, scale - e.deltaY * 0.002));
+    const ratio = scale / oldScale;
+
+    translateX = e.clientX - (e.clientX - translateX) * ratio;
+    translateY = e.clientY - (e.clientY - translateY) * ratio;
+
+    applyTransform();
+  }, { passive: false });
+
+  // Mouse drag
+  img.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    lastTranslateX = translateX;
+    lastTranslateY = translateY;
+    img.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    translateX = lastTranslateX + (e.clientX - dragStartX);
+    translateY = lastTranslateY + (e.clientY - dragStartY);
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    img.style.cursor = 'grab';
+  });
+
+  // Touch pinch zoom + drag
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      lastDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    } else if (e.touches.length === 1) {
+      isDragging = true;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+      lastTranslateX = translateX;
+      lastTranslateY = translateY;
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastDist) {
+        const oldScale = scale;
+        scale = Math.min(5, Math.max(0.5, scale * (dist / lastDist)));
+        const ratio = scale / oldScale;
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        translateX = cx - (cx - translateX) * ratio;
+        translateY = cy - (cy - translateY) * ratio;
+        applyTransform();
+      }
+      lastDist = dist;
+    } else if (e.touches.length === 1 && isDragging) {
+      translateX = lastTranslateX + (e.touches[0].clientX - dragStartX);
+      translateY = lastTranslateY + (e.touches[0].clientY - dragStartY);
+      applyTransform();
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', () => {
+    isDragging = false;
+    lastDist = 0;
+  });
+
+  // Double-click to reset
+  img.addEventListener('dblclick', () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+  });
+
+  // Close
+  const close = () => overlay.remove();
+  closeBtn.onclick = close;
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener('keydown', function escClose(e) {
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escClose); }
+  });
+
+  // Initial cursor
+  img.style.cursor = 'grab';
 }
 
 function renderArrivalPanel() {
@@ -236,7 +407,7 @@ function renderDirection(arrivals) {
             <span class="train-time ${cls}">${label}</span>
             <div class="train-info">
               <div class="train-dest">${a.dest || '—'}</div>
-              <div class="train-plat">${a.plat ? a.plat + ' 號月台' : ''}</div>
+              <div class="train-plat">${a.plat ? a.plat + ' 號月台' : ''}${a.time ? ' · ' + a.time : ''}</div>
             </div>
             ${i === 0 ? '<span class="train-seq">即將到站</span>' : `<span class="train-seq">第${i + 1}班</span>`}
           </div>`;
@@ -258,8 +429,9 @@ function parseArrivals(data, lineCode, stationCode) {
         dir,
         dest: t.dest || '',
         plat: t.plat || t.platform || '',
-        min: parseInt(t.time) || 0,
-        seq: parseInt(t.seq) || 0
+        min: parseInt(t.ttnt) ?? 0,
+        seq: parseInt(t.seq) || 0,
+        time: t.time || ''
       });
     });
   });
