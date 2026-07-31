@@ -105,7 +105,7 @@ function render() {
       <div class="map-section" id="map-section">
         <div class="section-label">🗺️ 港鐵路綫圖</div>
         <div style="font-size:11px;color:#8a8f99;margin-bottom:8px">點擊圖片可放大查看，支援縮放與拖拽</div>
-        <img id="mtr-map-img" class="mtr-map-thumb" src="https://www.mtr.com.hk/archive/corporate/en/services/images/route_map.jpg" alt="港鐵路綫圖" />
+        <img id="mtr-map-img" class="mtr-map-thumb" src="/hku-idt-guide/mtr-route-map.jpg" alt="港鐵路綫圖" />
       </div>
     </div>
   `;
@@ -165,7 +165,7 @@ function openZoom() {
   overlay.innerHTML = `
     <button class="zoom-close">✕</button>
     <div class="zoom-container" id="zoom-container">
-      <img class="zoom-image" id="zoom-image" src="https://www.mtr.com.hk/archive/corporate/en/services/images/route_map.jpg" alt="港鐵路綫圖" />
+      <img class="zoom-image" id="zoom-image" src="/hku-idt-guide/mtr-route-map.jpg" alt="港鐵路綫圖" />
     </div>
     <div class="zoom-hint">滑鼠滾輪 / 雙指縮放，拖拽移動</div>
   `;
