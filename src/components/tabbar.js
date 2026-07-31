@@ -4,7 +4,7 @@ import { currentPath, navigate } from '../router.js';
 const TABS = [
   { path: '/home', label: '首页', icon: '🏠' },
   { path: '/calendar', label: '校历', icon: '📅' },
-  { path: '/commute', label: '通勤', icon: '🚄' },
+  { path: '/commute', label: '地鐵', icon: '🚇' },
   { path: '/courses', label: '课程', icon: '📚' },
   { path: '/schedule', label: '课表', icon: '🗓' }
 ];
