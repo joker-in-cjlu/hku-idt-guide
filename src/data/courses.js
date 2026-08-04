@@ -368,8 +368,7 @@ export const DEGREE_RULES = {
   listAMin: 24, // List A 核心课至少 24 学分
   disciplineMin: 36, // 学科课(List A + List B)至少 36 学分
   electiveMax: 12, // 非本学科选修课最多 12 学分
-  dissertation: 24, // IDAT7100 毕业论文
-  self_choose: 12 //额外两门课
+  dissertation: 24 // IDAT7100 毕业论文
 };
 
 export function getCourse(code) {
