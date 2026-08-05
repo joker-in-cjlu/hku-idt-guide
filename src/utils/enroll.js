@@ -13,7 +13,7 @@ function timedSections(code) {
   return getSections(code).filter(s => s.day && s.start && s.end);
 }
 
-function toSlot(code, sec) {
+function toSlot(code, sec, type) {
   return {
     code,
     term: sec.term,
@@ -22,7 +22,8 @@ function toSlot(code, sec) {
     startMin: timeToMin(sec.start),
     endMin: timeToMin(sec.end),
     location: sec.venue || '',
-    instructor: sec.instructor || ''
+    instructor: sec.instructor || '',
+    type: type || 'course'
   };
 }
 
@@ -42,9 +43,15 @@ function findClashes(newSlot) {
 }
 
 function doAdd(code, slot) {
-  store.addCourse(code);
-  if (slot) store.addSlot(slot);
-  showToast(slot ? '已选课,时间已同步到课表' : '已加入选课');
+  if (slot && slot.type === 'audit') {
+    store.addAudit(code);
+    store.addSlot(slot);
+    showToast('已加入旁听,已同步到课表');
+  } else {
+    store.addCourse(code);
+    if (slot) store.addSlot(slot);
+    showToast(slot ? '已选课,时间已同步到课表' : '已加入选课');
+  }
 }
 
 // 冲突检查 → 确认取代 → 写入
@@ -67,7 +74,7 @@ function commitEnroll(code, slot, onDone) {
     cancelText: '保留原课表',
     onConfirm: () => {
       codes.forEach(c => {
-        if (c !== code) store.removeCourse(c);
+        if (c !== code) { store.removeCourse(c); store.removeAudit(c); }
         store.removeSlotsByCode(c);
       });
       doAdd(code, slot);
@@ -159,9 +166,42 @@ function doEnroll(code, onDone) {
 // 退课:同时移除选课与课表中该课程的全部时段
 export function unenrollCourse(code, onDone) {
   store.removeCourse(code);
+  store.removeAudit(code);
   store.removeSlotsByCode(code);
   showToast('已移出选课,课表时段同步删除');
   onDone && onDone();
+}
+
+// 旁听:与选课流程一致,但标记为旁听类型
+export function enrollAudit(code, onDone) {
+  const secs = timedSections(code);
+  if (!secs.length) {
+    store.addAudit(code);
+    showToast('已加入旁听(该课程暂无固定上课时间)');
+    onDone && onDone();
+    return;
+  }
+  if (secs.length === 1) {
+    commitEnroll(code, toSlot(code, secs[0], 'audit'), onDone);
+    return;
+  }
+  let chosen = 0;
+  const radios = secs.map((s, i) =>
+    `<label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f0f1f4;cursor:pointer">
+      <input type="radio" name="enroll-sec" value="${i}" ${i === 0 ? 'checked' : ''} style="margin-top:2px" />
+      <span style="font-size:12px;color:#14312a;line-height:1.5">${secText(s)}</span>
+    </label>`
+  ).join('');
+  showModal({
+    title: `选择 ${code} 的旁听班次`,
+    content: `<div style="max-height:260px;overflow-y:auto">${radios}</div>`,
+    confirmText: '确定旁听',
+    cancelText: '取消',
+    onConfirm: () => commitEnroll(code, toSlot(code, secs[chosen], 'audit'), onDone)
+  });
+  document.querySelectorAll('input[name="enroll-sec"]').forEach(el => {
+    el.onchange = () => { chosen = Number(el.value); };
+  });
 }
 
 // 课程卡片上的时间摘要,如 "S1 周四 19:00-21:50 / S2 周一 19:00-21:50"

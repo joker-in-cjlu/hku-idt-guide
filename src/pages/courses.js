@@ -1,6 +1,6 @@
 import { COURSES, DEGREE_RULES, LIST_META, semesterText, isElective } from '../data/courses.js';
 import * as store from '../utils/store.js';
-import { enrollCourse, unenrollCourse, timeSummary } from '../utils/enroll.js';
+import { enrollCourse, enrollAudit, unenrollCourse, timeSummary } from '../utils/enroll.js';
 import { navigate } from '../router.js';
 import { renderTabbar } from '../components/tabbar.js';
 
@@ -35,7 +35,7 @@ function render() {
     if (kw) { const hay = (c.code + c.title + c.titleZh + (c.exclusive || '')).toLowerCase(); if (hay.indexOf(kw) < 0) return false; }
     return true;
   }).map(c => {
-    return { ...c, semText: semesterText(c.semester), timeText: timeSummary(c.code), selected: selection.indexOf(c.code) >= 0 };
+    return { ...c, semText: semesterText(c.semester), timeText: timeSummary(c.code), selected: selection.indexOf(c.code) >= 0, auditing: store.isAuditing(c.code) };
   });
 
   const listTabs = [
@@ -66,6 +66,8 @@ function render() {
       .course-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
       .select-btn{font-size:12px;color:#22c0dc;background:#eef5f1;border-radius:999px;padding:5px 14px;cursor:pointer}
       .select-btn.selected{background:#22c0dc;color:#fff}
+      .audit-btn{color:#e6a23c;background:#fef5e7}
+      .audit-btn.selected{background:#e6a23c;color:#fff}
       .credit-bar{position:fixed;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom, 0px));background:#fff;border-top:1px solid #e8eaee;display:flex;align-items:center;padding:10px 16px;z-index:20}
       .credit-info{display:flex;flex:1;justify-content:space-around}
       .cc{text-align:center}
@@ -94,6 +96,7 @@ function render() {
         ${c.exclusive ? `<div style="font-size:11px;color:#c0392b;margin-top:6px">⚠ 互斥: ${c.exclusive}</div>` : ''}
         <div class="course-foot">
           <div class="select-btn ${c.selected ? 'selected' : ''}" data-toggle="${c.code}">${c.selected ? '已选 ✓' : '+ 选课'}</div>
+          <div class="select-btn audit-btn ${c.auditing ? 'selected' : ''}" data-audit="${c.code}">${c.auditing ? '旁听 ✓' : '👂 旁听'}</div>
         </div>
       </div>
     `).join('') : '<div class="card" style="text-align:center;color:#8a8f99;font-size:12px">没有匹配的课程,换个关键词试试</div>'}
@@ -121,6 +124,13 @@ function render() {
       const code = el.dataset.toggle;
       if (store.isSelected(code)) unenrollCourse(code, render);
       else enrollCourse(code, render);
+    };
+  });
+  container.querySelectorAll('[data-audit]').forEach(el => {
+    el.onclick = (e) => {
+      const code = el.dataset.audit;
+      if (store.isAuditing(code)) unenrollCourse(code, render);
+      else enrollAudit(code, render);
     };
   });
   const goSched = document.getElementById('go-schedule');

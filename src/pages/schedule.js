@@ -9,7 +9,8 @@ import { renderTabbar } from '../components/tabbar.js';
 
 const DAY_START = 8 * 60;
 const DAY_END = 22 * 60;
-const COLORS = ['#00573f', '#31597f', '#6b5b95', '#8a6d3b', '#7a5195', '#9c4f4f', '#2e6f5c', '#3d6e9e'];
+const COURSE_COLOR = '#22c0dc';
+const AUDIT_COLOR = '#e6a23c';
 
 let showAddModal = false;
 let showNoteModal = false;
@@ -24,17 +25,14 @@ function render() {
   const selection = store.getSelection().map(code => getCourse(code)).filter(Boolean);
   const selectionNames = selection.map(c => `${c.code} ${c.titleZh}`);
 
-  const colorMap = {};
-  let ci = 0;
   const blocks = slots.map(s => {
     const c = getCourse(s.code);
-    if (!(s.code in colorMap)) { colorMap[s.code] = COLORS[ci % COLORS.length]; ci++; }
     return {
       id: s.id, code: s.code, name: c ? c.titleZh : '', location: s.location,
       instructor: s.instructor || '', term: s.term || 0, section: s.section || '', note: s.note || '',
       leftPct: Math.round(((s.day - 1) * 100) / 7 * 1000) / 1000,
       top: s.startMin - DAY_START, height: Math.max(s.endMin - s.startMin, 40),
-      color: colorMap[s.code], timeText: `${minToTime(s.startMin)}-${minToTime(s.endMin)}`
+      color: s.type === 'audit' ? AUDIT_COLOR : COURSE_COLOR, timeText: `${minToTime(s.startMin)}-${minToTime(s.endMin)}`
     };
   });
 

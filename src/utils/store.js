@@ -1,6 +1,7 @@
 // 本地存储封装
 const KEY_SELECTION = 'idt_selection';
 const KEY_SLOTS = 'idt_slots';
+const KEY_AUDIT = 'idt_audit';
 
 function safeRead(key, def) {
   try {
@@ -43,6 +44,20 @@ export function addCourse(courseCode) {
 export function removeCourse(courseCode) {
   const list = getSelection().filter((c) => c !== courseCode);
   return safeWrite(KEY_SELECTION, list);
+}
+
+// ---------- 旁听 ----------
+export function getAudit() { return safeRead(KEY_AUDIT, []); }
+export function isAuditing(courseCode) { return getAudit().indexOf(courseCode) >= 0; }
+
+export function addAudit(courseCode) {
+  const list = getAudit();
+  if (list.indexOf(courseCode) < 0) { list.push(courseCode); safeWrite(KEY_AUDIT, list); }
+}
+
+export function removeAudit(courseCode) {
+  const list = getAudit().filter((c) => c !== courseCode);
+  return safeWrite(KEY_AUDIT, list);
 }
 
 // ---------- 课表时间段 ----------
