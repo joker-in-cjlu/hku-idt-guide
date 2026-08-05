@@ -54,11 +54,11 @@ function render() {
       .grid-head{display:flex;padding:0 0 4px 32px}
       .day-head{flex:1;text-align:center;font-size:11px;color:#6b7280}
       .day-head.weekend{color:#c0392b}
-      .sched-scroll{height:${Math.min(gridHeight * 0.7, 500)}px;overflow-y:auto;position:relative;margin:0 8px}
+      .sched-scroll{position:relative;margin:0 8px}
       .grid{display:flex;position:relative}
       .time-col{width:32px;flex-shrink:0}
       .time-cell{height:60px;font-size:9px;color:#8a8f99;text-align:right;padding-right:4px}
-      .days-wrap{position:relative;flex:1;border-left:1px solid #eef0f2}
+      .days-wrap{position:relative;flex:1;height:${gridHeight}px;border-left:1px solid #eef0f2}
       .day-col{position:absolute;top:0;bottom:0;border-right:1px solid #f5f6f8}
       .h-line{position:absolute;left:0;right:0;height:1px;background:#f5f6f8}
       .block{position:absolute;width:calc(100%/7 - 2px);border-radius:6px;padding:3px 4px;overflow:hidden;cursor:pointer;color:#fff;font-size:10px}
