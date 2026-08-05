@@ -41,10 +41,10 @@ export default function homePage() {
       <div class="entry-card" data-path="/schedule" style="background:#8a6d3b"><div class="ec-name">每周课表</div><div class="ec-sub">同步手机日历</div></div>
     </div>
     <div class="card">
-      <div class="card-title">毕业学分结构(26 级起统一 72 学分)</div>
+      <div class="card-title">毕业学分结构(26 级 72 - 84 学分)</div>
       <div style="display:flex;align-items:baseline;margin-bottom:12px">
-        <span style="font-size:28px;font-weight:700;color:#22c0dc;margin-right:8px">${rules.total}</span>
-        <span style="font-size:12px;color:#6b7280">学分 = 课程 ${rules.courseCredits} + 毕业论文 ${rules.dissertation}</span>
+        <span style="font-size:28px;font-weight:700;color:#22c0dc;margin-right:8px">${rules.total} ~${rules.total + rules.selfchoose} </span>
+        <span style="font-size:12px;color:#6b7280">学分 = 课程 (${rules.courseCredits} ~ ${rules.courseCredits} + ${rules.selfchoose}) + 毕业论文 ${rules.dissertation}</span>
       </div>
       <div style="display:flex;justify-content:space-between;background:#f4f8f6;border-radius:12px;padding:12px 8px">
         <div style="flex:1;text-align:center"><div style="font-size:15px;font-weight:600;color:#22c0dc">≥ ${rules.listAMin}</div><div style="font-size:10px;color:#6b7280;margin-top:2px">List A 核心课</div></div>
@@ -60,9 +60,9 @@ export default function homePage() {
         · 课程库与排课全部取自两份官方文件:MSc(Eng) & MSc 选课课程清单(第一学期共 ${sem1.length} 门)与全院第一学期课程时间表(27 页)<br>
         · 第一学期清单分五类:List A 学科核心课 ${cnt('A')} 门、List B 学科选修课 ${cnt('B')} 门、跨课程选修 ${cnt('XC')} 门、跨系选修 ${cnt('XD')} 门、毕业论文 ${cnt('capstone')} 门<br>
         · 另保留 ${sem2Count} 门本专业课程(第二学期 / 全年),其 List 归属与排课待官方第二学期文件公布后再核对<br>
-        · 总学分要求统一为 72 学分(课程 48 + 毕业论文 24)
+        · 总学分要求为 72 - 84 学分(课程 48 - 60 + 毕业论文 24)
       </div>
-      <div style="margin-top:10px;text-align:center"><span class="btn-plain" id="go-courses-2">查看课程库 / 下载官方 PDF</span></div>
+      <div style="margin-top:10px;text-align:center"><span class="btn-plain" id="go-courses-2">查看选课</span></div>
     </div>
     <div class="section-title">近期关键节点</div>
     ${ups.map(ev => `
